@@ -1,0 +1,19 @@
+pre_install() {
+    local product
+    product=$(cat /sys/class/dmi/id/product_name 2>/dev/null)
+
+    if [[ "$product" != "Alienware Aurora R12" ]]; then
+        echo "WARNING: This package is designed for the Alienware Aurora R12."
+        echo "         Detected hardware: ${product:-unknown}"
+        echo "         Installation will continue, but fan control may not work correctly."
+    fi
+}
+
+pre_upgrade() {
+    pre_install
+}
+
+post_install() {
+    echo "To apply the recommended ppd.conf for Power Profiles Daemon integration:"
+    echo "  cp /usr/share/alienware-tuned-profiles/ppd.conf.example /etc/tuned/ppd.conf"
+}
