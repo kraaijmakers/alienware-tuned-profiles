@@ -8,7 +8,10 @@ url="https://github.com/kraaijmakers/alienware-tuned-profiles"
 license=('custom')
 install=hardware-check.install
 depends=('tuned' 'gamemode')
-optdepends=('lib32-gamemode: 32-bit gamemode support')
+optdepends=(
+    'lib32-gamemode: 32-bit gamemode support'
+    'tuned-ppd: Power Profiles Daemon compatibility layer for tuned'
+)
 backup=(
     'etc/tuned/profiles/aw-balanced/tuned.conf'
     'etc/tuned/profiles/aw-performance/tuned.conf'
