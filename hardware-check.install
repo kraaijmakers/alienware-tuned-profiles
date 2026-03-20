@@ -6,6 +6,7 @@ pre_install() {
         echo "WARNING: This package is designed for the Alienware Aurora R12."
         echo "         Detected hardware: ${product:-unknown}"
         echo "         Installation will continue, but fan control may not work correctly."
+        echo "         Use at own risk!" 
     fi
 }
 
@@ -14,6 +15,13 @@ pre_upgrade() {
 }
 
 post_install() {
-    echo "To apply the recommended ppd.conf for Power Profiles Daemon integration:"
-    echo "  cp /usr/share/alienware-tuned-profiles/ppd.conf.example /etc/tuned/ppd.conf"
+    echo "The tuned profiles use the alienware-wmi platform profile interface."
+    echo "Ensure the module is loaded with the correct options by creating:"
+    echo "  /etc/modprobe.d/alienware-wmi.conf"
+    echo ""
+    echo "Example contents:"
+    echo "  options alienware-wmi force_platform_profile=1 force_hwmon=1 force_gmode=1"
+    echo ""
+    echo "Then regenerate your initramfs:"
+    echo "  mkinitcpio -P"
 }

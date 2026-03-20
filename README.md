@@ -1,56 +1,57 @@
 # Alienware Aurora R12 TuneD Profiles
 
-Custom [tuned](https://tuned-project.org/) profiles for the Alienware Aurora R12, providing fan control via ACPI alongside system performance tuning.
+Custom [tuned](https://tuned-project.org/) profiles for the Alienware Aurora R12, providing fan control via the kernel `platform-profile` sysfs interface alongside system performance tuning.
 
 ## Profiles
 
-### `powersave`
+### `aw-powersave`
 
-Extends the stock `desktop-powersave` tuned profile with the Alienware fan set to balanced mode.
+Extends the stock `desktop-powersave` tuned profile with the platform profile set to balanced.
 
 - Inherits all default `desktop-powersave` tuning
-- Sets fan to **balanced mode** via ACPI
+- Sets platform profile to **balanced** via `/sys/class/platform-profile/platform-profile-0/profile`
 
-### `balanced`
+### `aw-balanced`
 
-Extends the stock `balanced` tuned profile with the Alienware fan set to balanced mode.
+Extends the stock `balanced` tuned profile with the platform profile set to balanced.
 
 - Inherits all default `balanced` tuning (conservative CPU governor, moderate power usage)
-- Sets fan to **balanced mode** via ACPI
+- Sets platform profile to **balanced** via `/sys/class/platform-profile/platform-profile-0/profile`
 
-### `performance`
+### `aw-performance`
 
-Extends the stock `throughput-performance` profile with gaming-oriented overrides and the Alienware fan at full speed.
+Extends the stock `throughput-performance` profile with gaming-oriented overrides and the platform profile set to performance.
 
 - **CPU latency:** `force_latency=1` keeps the CPU out of deep C-states for consistent frame times
 - **Memory:** `transparent_hugepages=madvise`
 - **NMI watchdog:** disabled to reduce background CPU overhead
-- **Fan:** set to **performance mode** via ACPI
+- **Platform profile:** set to **performance** via `/sys/class/platform-profile/platform-profile-0/profile`
 - All other tuning inherited from `throughput-performance`
 
-## Fan Control
+## Fan / Platform Profile Control
 
-Fan mode is set by writing to `/proc/acpi/call` (requires `acpi_call` or `acpi_call-dkms`):
+Fan and thermal behaviour is controlled by writing to the kernel `platform-profile` sysfs node:
 
-| Mode        | ACPI Value |
-|-------------|------------|
-| Balanced    | `0xa0`     |
-| Performance | `0xa1`     |
-
-The fan script (`fan-profile.sh`) issues the ACPI call on profile activation:
-
-```bash
-echo "\_SB.AMW1.WMAX 0 0x15 {0x1,<value>,0x0,0x00}" > /proc/acpi/call
 ```
+/sys/class/platform-profile/platform-profile-0/profile
+```
+
+| TuneD Profile | Platform Profile Value |
+|---------------|------------------------|
+| `aw-powersave`              | `balanced`   |
+| `aw-balanced`               | `balanced`   |
+| `aw-performance` | `performance`|
+
+This requires no external kernel modules — the `platform-profile` interface is provided by the `alienware-wmi` driver built into the kernel.
 
 ## GameMode Integration
 
-[GameMode](https://github.com/FeralInteractive/gamemode) is configured to switch to the `performance` profile while a game is running and return to `balanced` when it exits (`/etc/gamemode.ini`):
+[GameMode](https://github.com/FeralInteractive/gamemode) is configured to switch to the `aw-performance` profile while a game is running and return to `aw-balanced` when it exits (`/etc/gamemode.ini`):
 
 ```ini
 [custom]
-start=/usr/bin/tuned-adm profile performance
-end=/usr/bin/tuned-adm profile balanced
+start=/usr/bin/tuned-adm profile aw-performance
+end=/usr/bin/tuned-adm profile aw-balanced
 ```
 
 ## Installation
@@ -76,7 +77,6 @@ sudo cp -r etc/tuned/profiles/* /etc/tuned/profiles/
 ### Requirements
 
 - `tuned`
-- `acpi_call` or `acpi_call-dkms`
 - `gamemode`
 
 ## Usage
@@ -84,9 +84,9 @@ sudo cp -r etc/tuned/profiles/* /etc/tuned/profiles/
 Activate a profile:
 
 ```bash
-sudo tuned-adm profile performance
-sudo tuned-adm profile balanced
-sudo tuned-adm profile powersave
+sudo tuned-adm profile aw-performance
+sudo tuned-adm profile aw-balanced
+sudo tuned-adm profile aw-powersave
 ```
 
 ### KDE Power Management (tuned-ppd)
@@ -101,9 +101,12 @@ The example maps PPD presets to these profiles:
 
 ```ini
 [profiles]
-power-saver=powersave
-balanced=balanced
-performance=performance
+power-saver=aw-powersave
+balanced=aw-balanced
+performance=aw-performance
+
+[battery]
+balanced=balanced-battery
 ```
 
-The KDE **Performance** preset will then activate the `performance` profile.
+The KDE **Performance** preset will then activate the `aw-performance` profile. When on battery, the `aw-balanced` PPD preset maps to a separate `balanced-battery` tuned profile (if defined).

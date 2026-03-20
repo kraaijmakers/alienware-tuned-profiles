@@ -1,0 +1,6 @@
+
+# Ignore package builds.
+*.pkg.tar.zst
+# Ignore src/ and pkg/
+src/
+pkg/
